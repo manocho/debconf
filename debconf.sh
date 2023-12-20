@@ -5,57 +5,88 @@ if [ "$EUID" -ne 0 ]; then
   echo "Este script debe ser ejecutado con privilegios de superusuario (root)."
   exit 1
 fi
+clear
+debconf_dir="/etc/debconf"
+debconf_file="state.inf"
+
+# Verificar si el directorio de estado debconf existe
+if [ -d "$debconf_dir" ]; then
+    debconf_status_line=$(grep "status: " "$debconf_dir/$debconf_file")
+    debconf_status=$(echo "$debconf_status_line" | awk -F ": " '{print $2}')
+    echo "debconf ya fué ejecutado en este sistema y se encuentra en estado $debconf_status"
+    read -p "¿Ejecutar debconf de todas formas? [si/NO]: " debconf_run_answer
+    debconf_run_answer=$(echo "$debconf_run_answer" | tr '[:upper:]' '[:lower:]')
+    if [ "$debconf_run_answer" == "si" ]; then
+        echo "Ejecutando debconf"
+        # Agrega aquí el comando que deseas ejecutar
+    else
+        echo "Salgo"
+        exit 1
+    fi
+else
+    # Crear el directorio si no existe
+    mkdir -p "$debconf_dir"
+    echo "Directorio de configuración de debconf creado en $debconf_dir"
+    echo "status: 0" > "$debconf_dir/$debconf_file"
+fi
 
 # Lee el hostname actual desde el archivo hosts
 hostname_actual=$(cat /etc/hostname)
-
 echo "El nombre de host actual es: $hostname_actual"
 
-# Función para verificar si un nombre de host es válido
-es_nombre_de_host_valido() {
-  local nombre_de_host=$1
-  # La expresión regular valida que el nombre de host consista en caracteres alfanuméricos y guiones (-)
-  [[ "$nombre_de_host" =~ ^[a-zA-Z0-9-]+$ ]]
-}
+    read -p "¿Desea cambiarlo? [s/N]: " debconf_hostname_answer
+    debconf_hostname_answer=$(echo "$debconf_hostname_answer" | tr '[:upper:]' '[:lower:]')
+    if [ "$debconf_hostname_answer" == "s" ]; then
+      # Función para verificar si un nombre de host es válido
+      es_nombre_de_host_valido() {
+        local nombre_de_host=$1
+        # La expresión regular valida que el nombre de host consista en caracteres alfanuméricos y guiones (-)
+        [[ "$nombre_de_host" =~ ^[a-zA-Z0-9-]+$ ]]
+      }
 
-# Inicializa la variable del nuevo nombre de host
-nuevo_hostname=""
+      # Inicializa la variable del nuevo nombre de host
+      nuevo_hostname=""
 
-# Continúa solicitando al usuario que ingrese el nuevo nombre de host hasta que se proporcione uno válido
-while true; do
-  # Solicitar al usuario que ingrese el nuevo nombre de host
-  echo "Ingresa el nuevo nombre de host (o presiona Enter para dejar el mismo):"
-  read nuevo_hostname
+      # Continúa solicitando al usuario que ingrese el nuevo nombre de host hasta que se proporcione uno válido
+      while true; do
+        # Solicitar al usuario que ingrese el nuevo nombre de host
+        echo "Ingresa el nuevo nombre de host (o presiona Enter para dejar el mismo):"
+        read nuevo_hostname
 
-  # Si no se proporciona un nuevo nombre, usa el actual
-  if [ -z "$nuevo_hostname" ]; then
-    nuevo_hostname=$hostname_actual
-  fi
+        # Si no se proporciona un nuevo nombre, usa el actual
+        if [ -z "$nuevo_hostname" ]; then
+          nuevo_hostname=$hostname_actual
+        fi
 
-  # Verifica si el nombre de host es válido
-  if ! es_nombre_de_host_valido "$nuevo_hostname"; then
-    echo "El nombre de host contiene caracteres no válidos. Por favor, utiliza solo letras, números y guiones."
-    continue
-  fi
+        # Verifica si el nombre de host es válido
+        if ! es_nombre_de_host_valido "$nuevo_hostname"; then
+          echo "El nombre de host contiene caracteres no válidos. Por favor, utiliza solo letras, números y guiones."
+          continue
+        fi
 
-  break
-done
+        break
+      done
 
-# Realiza la sustitución en el archivo hosts
-sed -i "s/\b$hostname_actual\b/$nuevo_hostname/g" /etc/hosts
-sed -i "s/\b$hostname_actual\b/$nuevo_hostname/g" /etc/hostname
+      # Realiza la sustitución en el archivo hosts
+      sed -i "s/\b$hostname_actual\b/$nuevo_hostname/g" /etc/hosts
+      sed -i "s/\b$hostname_actual\b/$nuevo_hostname/g" /etc/hostname
 
-# Verifica si la sustitución fue exitosa
-if [ $? -eq 0 ]; then
-  echo "El nombre de host se ha cambiado a $nuevo_hostname."
-else
-  echo "Error al cambiar el nombre de host."
-fi
+      # Verifica si la sustitución fue exitosa
+      if [ $? -eq 0 ]; then
+        echo "El nombre de host se ha cambiado a $nuevo_hostname."
+      else
+        echo "Error al cambiar el nombre de host."
+      fi
+
+        # Agrega aquí el comando que deseas ejecutar
+    else
+        echo "El hostname no se cambia"
+    fi
 
 ## APTITUDE ##
 echo "instalando paquetes base"
 apt update
-apt install htop curl wget avahi-daemon software-properties-common apt-transport-https ca-certificates curl gnupg lsb-release mc
+apt install htop curl wget avahi-daemon software-properties-common apt-transport-https ca-certificates curl gnupg lsb-release mc sudo screen
 
 
 ## DOCKER ##
@@ -70,3 +101,14 @@ systemctl enable docker
 nombreusuario=$(getent passwd 1000 | cut -d: -f1)
 usermod -aG sudo $nombreusuario
 usermod -aG docker $nombreusuario
+
+echo "export LS_OPTIONS='--color=auto'" >> /root/.bashrc
+echo "eval \"\$(dircolors)\"" >> /root/.bashrc
+echo "alias ls='ls \$LS_OPTIONS'" >> /root/.bashrc
+echo "alias ll='ls \$LS_OPTIONS -l'" >> /root/.bashrc
+echo "alias l='ls \$LS_OPTIONS -lA'" >> /root/.bashrc
+echo "alias rm='rm -i'" >> /root/.bashrc
+echo "alias cp='cp -i'" >> /root/.bashrc
+echo "alias mv='mv -i'" >> /root/.bashrc
+
+echo "Por favor reinicie el sistema"
