@@ -93,6 +93,9 @@ apt install htop curl wget avahi-daemon software-properties-common apt-transport
 sed -i "s/\buse-ipv6=yes\b/use-ipv6=no/g" /etc/avahi/avahi-daemon.conf
 systemctl restart avahi-daemon.service
 
+# Habilitar login root por SSH
+echo "PermitRootLogin yes" > /etc/ssh/sshd_config.d/login.conf
+
 ## DOCKER ##
 mkdir -p /etc/apt/keyrings
 curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
