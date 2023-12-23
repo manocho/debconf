@@ -86,6 +86,7 @@ echo "El nombre de host actual es: $hostname_actual"
 ## APTITUDE ##
 echo "instalando paquetes base"
 apt update
+apt upgrade
 apt install htop curl wget avahi-daemon software-properties-common apt-transport-https ca-certificates curl gnupg lsb-release mc sudo screen
 
 
