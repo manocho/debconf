@@ -89,6 +89,9 @@ apt update
 apt upgrade
 apt install htop curl wget avahi-daemon software-properties-common apt-transport-https ca-certificates curl gnupg lsb-release mc sudo screen
 
+# Desactivar IPv6 para avahi-daemon
+sed -i "s/\buse-ipv6=yes\b/use-ipv6=no/g" /etc/avahi/avahi-daemon.conf
+systemctl restart avahi-daemon.service
 
 ## DOCKER ##
 mkdir -p /etc/apt/keyrings
@@ -96,13 +99,15 @@ curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/
 echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
 apt update
 apt install docker-ce docker-ce-cli containerd.io docker-compose-plugin docker-compose
-systemctl status docker
+systemctl status docker -n 5
 systemctl enable docker
 
 nombreusuario=$(getent passwd 1000 | cut -d: -f1)
 usermod -aG sudo $nombreusuario
 usermod -aG docker $nombreusuario
 
+
+# Actualizo .bashsrc para root
 echo "export LS_OPTIONS='--color=auto'" >> /root/.bashrc
 echo "eval \"\$(dircolors)\"" >> /root/.bashrc
 echo "alias ls='ls \$LS_OPTIONS'" >> /root/.bashrc
@@ -112,4 +117,13 @@ echo "alias rm='rm -i'" >> /root/.bashrc
 echo "alias cp='cp -i'" >> /root/.bashrc
 echo "alias mv='mv -i'" >> /root/.bashrc
 
-echo "Por favor reinicie el sistema"
+# Pregunto si se debe reiniciar
+echo "Finalizado"
+read -p "¿Desea reiniciar? [s/N]: " reboot_answer
+reboot_answer=$(echo "$reboot_answer" | tr '[:upper:]' '[:lower:]')
+if [ "$reboot_answer" == "s" ]; then
+  echo "Reiniciando..."
+  reboot
+else 
+  echo "Fin del script."
+fi
