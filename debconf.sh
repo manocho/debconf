@@ -8,6 +8,7 @@ fi
 clear
 debconf_dir="/etc/debconf"
 debconf_file="state.inf"
+nombreusuario=$(getent passwd 1000 | cut -d: -f1)
 
 # Verificar si el directorio de estado debconf existe
 if [ -d "$debconf_dir" ]; then
@@ -96,19 +97,23 @@ systemctl restart avahi-daemon.service
 # Habilitar login root por SSH
 echo "PermitRootLogin yes" > /etc/ssh/sshd_config.d/login.conf
 
-## DOCKER ##
-mkdir -p /etc/apt/keyrings
-curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
-apt update
-apt install docker-ce docker-ce-cli containerd.io docker-compose-plugin docker-compose
-systemctl status docker -n 5
-systemctl enable docker
-
-nombreusuario=$(getent passwd 1000 | cut -d: -f1)
-usermod -aG sudo $nombreusuario
-usermod -aG docker $nombreusuario
-
+# Instalar Docker
+read -p "¿Desea instalar DOCKER? [s/N]: " reboot_answer
+docker_install_answer=$(echo "$docker_install_answer" | tr '[:upper:]' '[:lower:]')
+if [ "$docker_install_answer" == "s" ]; then
+  echo "Instalando Docker"
+  mkdir -p /etc/apt/keyrings
+  curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+  echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+  apt update
+  apt install docker-ce docker-ce-cli containerd.io docker-compose-plugin docker-compose
+  systemctl status docker -n 0
+  systemctl enable docker
+  usermod -aG sudo $nombreusuario
+  usermod -aG docker $nombreusuario
+else 
+  echo "Docker no se instalará"
+fi
 
 # Actualizo .bashsrc para root
 echo "export LS_OPTIONS='--color=auto'" >> /root/.bashrc
