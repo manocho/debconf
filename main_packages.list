@@ -1,0 +1,13 @@
+htop
+curl
+wget
+avahi-daemon
+software-properties-common
+apt-transport-https
+ca-certificates
+curl
+gnupg
+lsb-release
+mc
+sudo
+screen

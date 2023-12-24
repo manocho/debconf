@@ -9,6 +9,8 @@ clear
 debconf_dir="/etc/debconf"
 debconf_file="state.inf"
 nombreusuario=$(getent passwd 1000 | cut -d: -f1)
+main_packages_file="main_packages.list"
+docker_packages_file="docker_packages.list"
 
 # Verificar si el directorio de estado debconf existe
 if [ -d "$debconf_dir" ]; then
@@ -88,7 +90,8 @@ echo "El nombre de host actual es: $hostname_actual"
 echo "instalando paquetes base"
 apt update
 apt upgrade
-apt install htop curl wget avahi-daemon software-properties-common apt-transport-https ca-certificates curl gnupg lsb-release mc sudo screen
+main_packages=$(awk '{ printf "%s ", $1 }' "main_packages.list")
+apt install -y " $main_packages"
 
 # Desactivar IPv6 para avahi-daemon
 sed -i "s/\buse-ipv6=yes\b/use-ipv6=no/g" /etc/avahi/avahi-daemon.conf
@@ -106,7 +109,8 @@ if [ "$docker_install_answer" == "s" ]; then
   curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
   echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
   apt update
-  apt install docker-ce docker-ce-cli containerd.io docker-compose-plugin docker-compose
+  docker_packages=$(awk '{ printf "%s ", $1 }' "docker_packages.list")
+  apt install -y " $docker_packages"
   systemctl status docker -n 0
   systemctl enable docker
   usermod -aG sudo $nombreusuario
