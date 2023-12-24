@@ -115,6 +115,19 @@ else
   echo "Docker no se instalará"
 fi
 
+# Instalar Shell-in-a-Box
+read -p "¿Desea instalar SHELL-IN-A-BOX? [s/N]: " reboot_answer
+shellbox_install_answer=$(echo "$shellbox_install_answer" | tr '[:upper:]' '[:lower:]')
+if [ "$shellbox_install_answer" == "s" ]; then
+  echo "Instalando Shell-in-a-Box"
+  apt install openssl shellinabox
+  sed -i "s/\bSHELLINABOX_PORT=4200\b/SHELLINABOX_PORT=8022/g" /etc/default/shellinabox
+  systemctl restart shellinabox
+  systemctl enable shellinabox
+else 
+  echo "Shell-in-a-Box no se instalará"
+fi
+
 # Actualizo .bashsrc para root
 echo "export LS_OPTIONS='--color=auto'" >> /root/.bashrc
 echo "eval \"\$(dircolors)\"" >> /root/.bashrc
