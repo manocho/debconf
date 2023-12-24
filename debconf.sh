@@ -101,7 +101,7 @@ systemctl restart avahi-daemon.service
 echo "PermitRootLogin yes" > /etc/ssh/sshd_config.d/login.conf
 
 # Instalar Docker
-read -p "¿Desea instalar DOCKER? [s/N]: " reboot_answer
+read -p "¿Desea instalar DOCKER? [s/N]: " docker_install_answer
 docker_install_answer=$(echo "$docker_install_answer" | tr '[:upper:]' '[:lower:]')
 if [ "$docker_install_answer" == "s" ]; then
   echo "Instalando Docker"
@@ -120,7 +120,7 @@ else
 fi
 
 # Instalar Shell-in-a-Box
-read -p "¿Desea instalar SHELL-IN-A-BOX? [s/N]: " reboot_answer
+read -p "¿Desea instalar SHELL-IN-A-BOX? [s/N]: " shellbox_install_answer
 shellbox_install_answer=$(echo "$shellbox_install_answer" | tr '[:upper:]' '[:lower:]')
 if [ "$shellbox_install_answer" == "s" ]; then
   echo "Instalando Shell-in-a-Box"
