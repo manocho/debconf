@@ -143,6 +143,9 @@ else
   echo "Shell-in-a-Box no se instalará"
 fi
 
+# Limpiando paquetes obsoletos
+apt autoremove -y
+
 # Actualizo .bashsrc para root
 echo "export LS_OPTIONS='--color=auto'" >> /root/.bashrc
 echo "eval \"\$(dircolors)\"" >> /root/.bashrc
