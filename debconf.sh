@@ -90,8 +90,13 @@ echo "El nombre de host actual es: $hostname_actual"
 echo "instalando paquetes base"
 apt update
 apt upgrade
-main_packages=$(awk '{ printf "%s ", $1 }' "main_packages.list")
-apt install -y " $main_packages"
+
+if [ ! -f "$main_packages_file" ]; then
+    echo "Error: El archivo $main_packages_file no existe."
+    exit 1
+else
+    cat "$main_packages_file" | xargs apt install -y
+fi
 
 # Desactivar IPv6 para avahi-daemon
 sed -i "s/\buse-ipv6=yes\b/use-ipv6=no/g" /etc/avahi/avahi-daemon.conf
@@ -109,8 +114,14 @@ if [ "$docker_install_answer" == "s" ]; then
   curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
   echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
   apt update
-  docker_packages=$(awk '{ printf "%s ", $1 }' "docker_packages.list")
-  apt install -y " $docker_packages"
+
+if [ ! -f "$docker_packages_file" ]; then
+    echo "Error: El archivo $docker_packages_file no existe."
+    exit 1
+else
+    cat "$docker_packages_file" | xargs apt install -y
+fi
+
   systemctl status docker -n 0
   systemctl enable docker
   usermod -aG sudo $nombreusuario
