@@ -6,11 +6,15 @@ if [ "$EUID" -ne 0 ]; then
   exit 1
 fi
 clear
+
+# Variables Globales:
+
 debconf_dir="/etc/debconf"
 debconf_file="state.inf"
 nombreusuario=$(getent passwd 1000 | cut -d: -f1)
 main_packages_file="main_packages.list"
 docker_packages_file="docker_packages.list"
+timezone="America/Argentina/Buenos_Aires"
 
 # Verificar si el directorio de estado debconf existe
 if [ -d "$debconf_dir" ]; then
@@ -142,6 +146,18 @@ if [ "$shellbox_install_answer" == "s" ]; then
 else 
   echo "Shell-in-a-Box no se instalará"
 fi
+
+# Permisos de usuario
+usermod -aG sudo $nombreusuario
+usermod -aG docker $nombreusuario
+usermod -aG adm $nombreusuario
+usermod -aG dialout $nombreusuario
+usermod -aG sudo $nombreusuario
+usermod -aG dip $nombreusuario
+usermod -aG plugdev $nombreusuario
+
+# Zona horaria
+timedatectl set-timezone $timezone
 
 # Limpiando paquetes obsoletos
 apt autoremove -y
